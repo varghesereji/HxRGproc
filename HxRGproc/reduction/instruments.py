@@ -106,7 +106,7 @@ def fix_header_function_SpecTANSPEC(header,fname=None):
    if 'CHANNELS' not in header:
            header['CHANNELS'] = 4
    if ('NDRITIME' not in header) or (header['NDRITIME'] == 0):
-       FrameTime = 5.253  #Time taken for each readout.
+       FrameTime = 5.263  #Time taken for each readout.
        Frame_Number = re.search('.*\.Z\.(\d+?)\.fits',os.path.basename(fname)).group(1)
        time = int(Frame_Number) * FrameTime
        header['NDRITIME'] = time
@@ -188,7 +188,7 @@ SupportedReadOutSoftware_for_slope = {
                    'estimate_NoNDR_Drop_G_func': None,
                    'ExtraHeaderCalculations_func': None},
     'TIRSPEC':{'RampFilenameString':'{0}-',#Input filename structure with Ramp id substitution
-                   'RampidRegexp':'(.*?-\d*?)-debug-\d*\.fits',# Regexp to extract unique Ramp id from filename
+                   'RampidRegexp':'(.*?-\d*?)-debug-\d*?\.fits',# Regexp to extract unique Ramp id from filename
                    'HDR_NOUTPUTS' : 'CHANNELS', # Fits header for number of output channels
                    'HDR_INTTIME' : 'NDRITIME', # Fits header for accumulated exposure time in each NDR
                    'filename_sort_func': sort_filename_key_function_TIRSPEC,
