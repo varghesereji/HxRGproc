@@ -93,26 +93,35 @@ def fix_datacube_function_HPFLinux(DataCube):
     return DataCube
 #####################################################################
 #####################################################################
-#### Functions specific to reduce SpecTANSPEC software data
+#### Functions specific to reduce TANSPEC software data
 #####################################################################
 
-def sort_filename_key_function_SpecTANSPEC(fname):
+def sort_filename_key_function_TANSPEC(fname):
     """ Function which returns the key to sort SpecTANSPEC filename """
     return tuple(map(int,re.search('.*-(\d+?)\.Z\.(\d+?)\.fits',os.path.basename(fname)).group(1,2)))
 
 
-def fix_header_function_SpecTANSPEC(header,fname=None):
+def fix_header_function_TANSPEC(header,fname=None):
+    
    """Function to fix any missing headers needed in header"""
    if 'CHANNELS' not in header:
+       if header['NAXIS1'] == 2048:
+           # TANSPEC spectrograph have a detector of size 2048X2048
            header['CHANNELS'] = 4
+       else:
+           # Imager is using H1RG, and a small portion of it is reading out. usually 480X460
+           header['CHANNELS'] = 1
    if ('NDRITIME' not in header) or (header['NDRITIME'] == 0):
-       FrameTime = 5.263  #Time taken for each readout.
+       if header['NAXIS1'] == 2048:
+           FrameTime = 5.263  #Time taken for each readout.
+       elif header['NAXIS1'] == 480:
+           FrameTime = 1.877
        Frame_Number = re.search('.*\.Z\.(\d+?)\.fits',os.path.basename(fname)).group(1)
        time = int(Frame_Number) * FrameTime
        header['NDRITIME'] = time
    return header
 
-def fix_datacube_function_SpecTANSPEC(DataCube):
+def fix_datacube_function_TANSPEC(DataCube):
     """Fixes the zero readout rows in datacube"""
     DataCube = 65536-DataCube.astype(np.float32)
     return DataCube
@@ -178,13 +187,13 @@ SupportedReadOutSoftware_for_slope = {
                 'FixDataCube_func': lambda Dcube: Dcube, # Optional function call to fix input Data Cube
                 'estimate_NoNDR_Drop_G_func':None,
                 'ExtraHeaderCalculations_func':None},
-    'SpecTANSPEC':{'RampFilenameString':'{0}.Z.',#Input filename structure with Ramp id substitution
+    'TANSPEC':{'RampFilenameString':'{0}.Z.',#Input filename structure with Ramp id substitution
                    'RampidRegexp':'(.*?-\d*?)\.Z\.\d*\.fits',# Regexp to extract unique Ramp id from filename
                    'HDR_NOUTPUTS' : 'CHANNELS', # Fits header for number of output channels
                    'HDR_INTTIME' : 'NDRITIME', # Fits header for accumulated exposure time in each NDR
-                   'filename_sort_func': sort_filename_key_function_SpecTANSPEC,
-                   'FixHeader_func': fix_header_function_SpecTANSPEC,
-                   'FixDataCube_func': fix_datacube_function_SpecTANSPEC,
+                   'filename_sort_func': sort_filename_key_function_TANSPEC,
+                   'FixHeader_func': fix_header_function_TANSPEC,
+                   'FixDataCube_func': fix_datacube_function_TANSPEC,
                    'estimate_NoNDR_Drop_G_func': None,
                    'ExtraHeaderCalculations_func': None},
     'TIRSPEC':{'RampFilenameString':'{0}-',#Input filename structure with Ramp id substitution
@@ -221,10 +230,10 @@ SupportedReadOutSoftware_for_cds = {
                 'InputSubDir' : 'fits', # Append any redundant input subdirectory to be added
                 'filename_sort_func': sort_filename_key_function_HPFLinux,
                 'estimate_NoNDR_Drop_G_func':None},
-    'SpecTANSPEC':{'RampFilenameString':'{0}.Z.',#Inpui filename structure with Ramp id substitution
+    'TANSPEC':{'RampFilenameString':'{0}.Z.',#Inpui filename structure with Ramp id substitution
                    'RampidRegexp':'.*-(\d*?)\.Z\.\d*?\.fits',# Regexp to extract unique Ramp id from filename
                    'InputSubDir' : '', # Append any redundant input subdirectory to be added
-                   'filename_sort_func':sort_filename_key_function_SpecTANSPEC,
+                   'filename_sort_func':sort_filename_key_function_TANSPEC,
                    'estimate_NoNDR_Drop_G_func':None},
     'TIRSPEC':{'RampFilenameString':'{0}-',#Inpui filename structure with Ramp id substitution
                    'RampidRegexp':'(.*?-\d*?)-debug-\d*?\.fits',# Regexp to extract unique Ramp id from filename
